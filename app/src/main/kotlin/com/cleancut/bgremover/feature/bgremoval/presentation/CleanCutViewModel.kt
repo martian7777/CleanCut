@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.cleancut.bgremover.core.settings.ExportFormat
 import com.cleancut.bgremover.core.settings.SettingsManager
 import com.cleancut.bgremover.feature.bgremoval.data.MediaStoreExportRepository
-import com.cleancut.bgremover.feature.bgremoval.data.MlKitBackgroundRemover
+import com.cleancut.bgremover.feature.bgremoval.data.RmbgBackgroundRemover
 import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundOption
 import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalError
 import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalStage
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 class CleanCutViewModel(
     application: Application,
-    private val backgroundRemover: BackgroundRemover = MlKitBackgroundRemover(application),
+    private val backgroundRemover: BackgroundRemover = RmbgBackgroundRemover(application),
     private val exportRepository: ExportRepository = MediaStoreExportRepository(application),
     private val settingsManager: SettingsManager = SettingsManager.getInstance(application),
 ) : AndroidViewModel(application) {
@@ -57,7 +57,7 @@ class CleanCutViewModel(
                 onFailure = { error ->
                     _uiState.value = CleanCutUiState.Error(
                         message = errorMessage(error),
-                        recoverable = error !is BackgroundRemovalError.PlayServicesUnavailable,
+                        recoverable = true,
                     )
                 },
             )
@@ -137,14 +137,12 @@ class CleanCutViewModel(
     }
 
     private fun errorMessage(error: Throwable): String = when (error) {
-        is BackgroundRemovalError.PlayServicesUnavailable ->
-            "CleanCut requires Google Play Services for background removal, which isn't available on this device."
-        is BackgroundRemovalError.ModuleDownloadFailed ->
-            "Couldn't download the on-device AI model. Check your internet connection and try again."
         is BackgroundRemovalError.DecodeFailed ->
             "Couldn't read that image. Try a different photo."
         is BackgroundRemovalError.OutOfMemory ->
             "This photo is too large for this device to process."
+        is BackgroundRemovalError.ModelLoadFailed ->
+            "Couldn't load the AI model. Try reinstalling the app."
         is BackgroundRemovalError.SegmentationFailed -> {
             val detail = error.cause.message ?: error.cause::class.java.simpleName
             "Background removal failed: $detail"

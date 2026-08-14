@@ -4,24 +4,20 @@ import android.net.Uri
 
 enum class BackgroundRemovalStage {
     DECODING,
-    CHECKING_MODEL,
-    DOWNLOADING_MODEL,
+    LOADING_MODEL,
     SEGMENTING,
     COMPOSITING,
     DONE,
 }
 
 sealed class BackgroundRemovalError : Exception() {
-    /** Device has no usable Google Play Services install at all. */
-    object PlayServicesUnavailable : BackgroundRemovalError()
-
-    /** The on-demand ML Kit module failed to download (e.g. no network on first use). */
-    object ModuleDownloadFailed : BackgroundRemovalError()
-
     object DecodeFailed : BackgroundRemovalError()
 
     /** Compositing ran out of memory on this device for this image size. */
     object OutOfMemory : BackgroundRemovalError()
+
+    /** The bundled ONNX model asset failed to load into an inference session. */
+    data class ModelLoadFailed(override val cause: Throwable) : BackgroundRemovalError()
 
     data class SegmentationFailed(override val cause: Throwable) : BackgroundRemovalError()
 }

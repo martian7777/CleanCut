@@ -56,6 +56,7 @@ android {
 
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        jniLibs.pickFirsts += "**/libc++_shared.so"
     }
 }
 
@@ -72,11 +73,8 @@ dependencies {
     implementation("androidx.exifinterface:exifinterface:1.3.7")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
 
-    implementation("com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1")
-    implementation("com.google.android.gms:play-services-base:18.5.0")
-    implementation("com.google.mlkit:vision-common:17.3.0")
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.22.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

@@ -31,7 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.BlurOn
-import androidx.compose.material.icons.rounded.CloudDownload
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Psychology
 import androidx.compose.material3.CircularProgressIndicator
@@ -227,8 +226,7 @@ fun ProcessingIndicator(
 
 private fun stageIcon(stage: BackgroundRemovalStage): ImageVector = when (stage) {
     BackgroundRemovalStage.DECODING -> Icons.Rounded.Image
-    BackgroundRemovalStage.CHECKING_MODEL -> Icons.Rounded.Psychology
-    BackgroundRemovalStage.DOWNLOADING_MODEL -> Icons.Rounded.CloudDownload
+    BackgroundRemovalStage.LOADING_MODEL -> Icons.Rounded.Psychology
     BackgroundRemovalStage.SEGMENTING -> Icons.Rounded.AutoAwesome
     BackgroundRemovalStage.COMPOSITING -> Icons.Rounded.BlurOn
     BackgroundRemovalStage.DONE -> Icons.Rounded.AutoAwesome
@@ -236,8 +234,7 @@ private fun stageIcon(stage: BackgroundRemovalStage): ImageVector = when (stage)
 
 private fun stageTitle(stage: BackgroundRemovalStage): String = when (stage) {
     BackgroundRemovalStage.DECODING -> "Decoding Image"
-    BackgroundRemovalStage.CHECKING_MODEL -> "Initializing Engine"
-    BackgroundRemovalStage.DOWNLOADING_MODEL -> "Downloading AI Weights"
+    BackgroundRemovalStage.LOADING_MODEL -> "Initializing Engine"
     BackgroundRemovalStage.SEGMENTING -> "Isolating Subject"
     BackgroundRemovalStage.COMPOSITING -> "Rendering Clean Matte"
     BackgroundRemovalStage.DONE -> "Subject Isolated!"
@@ -245,8 +242,7 @@ private fun stageTitle(stage: BackgroundRemovalStage): String = when (stage) {
 
 private fun stageDetail(stage: BackgroundRemovalStage): String = when (stage) {
     BackgroundRemovalStage.DECODING -> "Reading full-resolution EXIF & pixel matrix"
-    BackgroundRemovalStage.CHECKING_MODEL -> "Validating Google Play Services Vision model"
-    BackgroundRemovalStage.DOWNLOADING_MODEL -> "First time setup — downloading ML model"
+    BackgroundRemovalStage.LOADING_MODEL -> "Loading on-device AI model"
     BackgroundRemovalStage.SEGMENTING -> "Running deep neural segmentation on subject"
     BackgroundRemovalStage.COMPOSITING -> "Upsampling confidence mask & creating alpha cutout"
     BackgroundRemovalStage.DONE -> "Preparing studio workspace"
