@@ -57,16 +57,16 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
             }
 
             onProgress(BackgroundRemovalStage.DECODING)
-            // Copy once into app-private cache - Photo Picker Uris aren't reliably
-            // reopenable across the multiple decode passes below (see ImageDecodeUtils).
+            // Copy once into app-private cache, then read those bytes once - Photo
+            // Picker Uris and even our own cache file aren't reliably reopenable
+            // across the multiple decode passes below (see ImageDecodeUtils).
             val cacheFile = ImageDecodeUtils.copyToLocalCache(context.cacheDir, resolver, sourceUri)
             cachedSourceFile = cacheFile
-            val localUri = Uri.fromFile(cacheFile)
+            val sourceBytes = ImageDecodeUtils.readSourceBytes(cacheFile)
 
-            fullResSource = ImageDecodeUtils.decodeFullResolutionMutable(resolver, localUri)
+            fullResSource = ImageDecodeUtils.decodeFullResolutionMutable(sourceBytes)
             segInputBitmap = ImageDecodeUtils.decodeDownscaledForSegmentation(
-                resolver,
-                localUri,
+                sourceBytes,
                 SEGMENTATION_INPUT_LONG_EDGE_PX,
             )
 

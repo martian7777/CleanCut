@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
 
@@ -14,12 +15,10 @@ data class ImageBounds(val width: Int, val height: Int)
 object ImageDecodeUtils {
 
     /**
-     * Copies [uri] into a local cache file and returns a file:// Uri for it. Some
-     * sources - notably the Android Photo Picker's content://media/picker/... Uris,
-     * especially on MIUI - aren't reliably reopenable across the several decode
-     * passes this pipeline needs (bounds check, full-res decode, downscaled decode,
-     * EXIF read). A stable local copy sidesteps that instead of guessing at exactly
-     * which reopen fails on which device.
+     * Copies [uri] into a local cache file and returns it. Some sources - notably
+     * the Android Photo Picker's content://media/picker/... Uris, especially on
+     * MIUI - aren't reliably reopenable, so callers should read this file's bytes
+     * once via [readSourceBytes] rather than reopening the file per decode pass.
      */
     fun copyToLocalCache(cacheDir: File, resolver: ContentResolver, uri: Uri): File {
         val cacheFile = File(cacheDir, "cleancut_source_${System.currentTimeMillis()}")
@@ -29,20 +28,26 @@ object ImageDecodeUtils {
         return cacheFile
     }
 
-    fun readBounds(resolver: ContentResolver, uri: Uri): ImageBounds {
+    /**
+     * Reads [file] into memory once. Every decode pass below (bounds check,
+     * full-res decode, downscaled decode, EXIF read) works off this buffer instead
+     * of reopening the cache file - on some devices the file has been observed to
+     * become unreadable (e.g. low-storage cache eviction) between an early decode
+     * pass and a later one over the same still-slow multi-step pipeline.
+     */
+    fun readSourceBytes(file: File): ByteArray = file.readBytes()
+
+    fun readBounds(bytes: ByteArray): ImageBounds {
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) }
-            ?: error("Unable to open $uri")
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
         return ImageBounds(options.outWidth, options.outHeight)
     }
 
-    private fun readOrientation(resolver: ContentResolver, uri: Uri): Int {
-        return resolver.openInputStream(uri)?.use { stream ->
-            ExifInterface(stream).getAttributeInt(
-                ExifInterface.TAG_ORIENTATION,
-                ExifInterface.ORIENTATION_NORMAL,
-            )
-        } ?: ExifInterface.ORIENTATION_NORMAL
+    private fun readOrientation(bytes: ByteArray): Int {
+        return ExifInterface(ByteArrayInputStream(bytes)).getAttributeInt(
+            ExifInterface.TAG_ORIENTATION,
+            ExifInterface.ORIENTATION_NORMAL,
+        )
     }
 
     /**
@@ -50,16 +55,16 @@ object ImageDecodeUtils {
      * rotation applied. This is the one full-size buffer that becomes the final
      * composited output in place - the kept-pixel path never resamples.
      */
-    fun decodeFullResolutionMutable(resolver: ContentResolver, uri: Uri): Bitmap {
+    fun decodeFullResolutionMutable(bytes: ByteArray): Bitmap {
         val options = BitmapFactory.Options().apply {
             inSampleSize = 1
             inPreferredConfig = Bitmap.Config.ARGB_8888
             inMutable = true
         }
-        val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) }
-            ?: error("Unable to decode $uri")
+        val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+            ?: error("Unable to decode source image")
 
-        return applyExifOrientation(decoded, readOrientation(resolver, uri))
+        return applyExifOrientation(decoded, readOrientation(bytes))
     }
 
     /**
@@ -67,12 +72,8 @@ object ImageDecodeUtils {
      * doesn't need (or want) a 48MP input. This bitmap should be recycled by the
      * caller as soon as the mask has been read out of it.
      */
-    fun decodeDownscaledForSegmentation(
-        resolver: ContentResolver,
-        uri: Uri,
-        targetLongEdgePx: Int,
-    ): Bitmap {
-        val bounds = readBounds(resolver, uri)
+    fun decodeDownscaledForSegmentation(bytes: ByteArray, targetLongEdgePx: Int): Bitmap {
+        val bounds = readBounds(bytes)
         val longEdge = maxOf(bounds.width, bounds.height)
         val sampleSize = calculateInSampleSize(longEdge, targetLongEdgePx)
 
@@ -80,10 +81,10 @@ object ImageDecodeUtils {
             inSampleSize = sampleSize
             inPreferredConfig = Bitmap.Config.ARGB_8888
         }
-        val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) }
-            ?: error("Unable to decode $uri")
+        val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+            ?: error("Unable to decode source image")
 
-        return applyExifOrientation(decoded, readOrientation(resolver, uri))
+        return applyExifOrientation(decoded, readOrientation(bytes))
     }
 
     private fun calculateInSampleSize(sourceLongEdge: Int, targetLongEdge: Int): Int {
