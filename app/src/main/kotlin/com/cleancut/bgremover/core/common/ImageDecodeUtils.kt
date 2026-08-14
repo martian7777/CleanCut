@@ -12,6 +12,15 @@ import java.io.FileOutputStream
 
 data class ImageBounds(val width: Int, val height: Int)
 
+// Modern phone cameras (108MP+, common on e.g. Redmi devices) would otherwise
+// decode to an uncapped ARGB_8888 buffer several hundred MB in size - well past
+// what many devices' actual available RAM allows, and past typical GPU max
+// texture size. That doesn't throw a catchable OutOfMemoryError; the process
+// just gets silently killed by the OS. Capping the long edge keeps peak memory
+// and canvas draw calls bounded while staying byte-identical for the vast
+// majority of real-world photos, which fall well under this size.
+private const val MAX_FULL_RES_LONG_EDGE_PX = 4096
+
 object ImageDecodeUtils {
 
     /**
@@ -51,13 +60,19 @@ object ImageDecodeUtils {
     }
 
     /**
-     * Decodes the source at full resolution (inSampleSize = 1), mutable, with EXIF
-     * rotation applied. This is the one full-size buffer that becomes the final
-     * composited output in place - the kept-pixel path never resamples.
+     * Decodes the source mutable, with EXIF rotation applied, at its native
+     * resolution unless that exceeds [MAX_FULL_RES_LONG_EDGE_PX] - in which case it
+     * downsamples to the largest power-of-two step under the cap. This is the one
+     * full-size buffer that becomes the final composited output in place - the
+     * kept-pixel path never resamples beyond this single decode step.
      */
     fun decodeFullResolutionMutable(bytes: ByteArray): Bitmap {
+        val bounds = readBounds(bytes)
+        val longEdge = maxOf(bounds.width, bounds.height)
+        val sampleSize = calculateInSampleSize(longEdge, MAX_FULL_RES_LONG_EDGE_PX)
+
         val options = BitmapFactory.Options().apply {
-            inSampleSize = 1
+            inSampleSize = sampleSize
             inPreferredConfig = Bitmap.Config.ARGB_8888
             inMutable = true
         }
