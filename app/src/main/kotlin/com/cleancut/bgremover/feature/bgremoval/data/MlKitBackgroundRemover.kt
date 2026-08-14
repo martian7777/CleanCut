@@ -11,6 +11,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.segmentation.subject.SubjectSegmentation
 import com.google.mlkit.vision.segmentation.subject.SubjectSegmenterOptions
 import kotlinx.coroutines.tasks.await
+import java.io.File
 
 private const val SEGMENTATION_INPUT_LONG_EDGE_PX = 1024
 
@@ -44,6 +45,7 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
 
         var fullResSource: android.graphics.Bitmap? = null
         var segInputBitmap: android.graphics.Bitmap? = null
+        var cachedSourceFile: File? = null
 
         return try {
             onProgress(BackgroundRemovalStage.CHECKING_MODEL)
@@ -55,10 +57,16 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
             }
 
             onProgress(BackgroundRemovalStage.DECODING)
-            fullResSource = ImageDecodeUtils.decodeFullResolutionMutable(resolver, sourceUri)
+            // Copy once into app-private cache - Photo Picker Uris aren't reliably
+            // reopenable across the multiple decode passes below (see ImageDecodeUtils).
+            val cacheFile = ImageDecodeUtils.copyToLocalCache(context.cacheDir, resolver, sourceUri)
+            cachedSourceFile = cacheFile
+            val localUri = Uri.fromFile(cacheFile)
+
+            fullResSource = ImageDecodeUtils.decodeFullResolutionMutable(resolver, localUri)
             segInputBitmap = ImageDecodeUtils.decodeDownscaledForSegmentation(
                 resolver,
-                sourceUri,
+                localUri,
                 SEGMENTATION_INPUT_LONG_EDGE_PX,
             )
 
@@ -98,6 +106,7 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
             Result.failure(BackgroundRemovalError.SegmentationFailed(t))
         } finally {
             segInputBitmap?.recycle()
+            cachedSourceFile?.delete()
         }
     }
 }

@@ -6,10 +6,28 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
+import java.io.File
+import java.io.FileOutputStream
 
 data class ImageBounds(val width: Int, val height: Int)
 
 object ImageDecodeUtils {
+
+    /**
+     * Copies [uri] into a local cache file and returns a file:// Uri for it. Some
+     * sources - notably the Android Photo Picker's content://media/picker/... Uris,
+     * especially on MIUI - aren't reliably reopenable across the several decode
+     * passes this pipeline needs (bounds check, full-res decode, downscaled decode,
+     * EXIF read). A stable local copy sidesteps that instead of guessing at exactly
+     * which reopen fails on which device.
+     */
+    fun copyToLocalCache(cacheDir: File, resolver: ContentResolver, uri: Uri): File {
+        val cacheFile = File(cacheDir, "cleancut_source_${System.currentTimeMillis()}")
+        resolver.openInputStream(uri)?.use { input ->
+            FileOutputStream(cacheFile).use { output -> input.copyTo(output) }
+        } ?: error("Unable to open $uri")
+        return cacheFile
+    }
 
     fun readBounds(resolver: ContentResolver, uri: Uri): ImageBounds {
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
