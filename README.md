@@ -8,7 +8,9 @@
 [![Android](https://img.shields.io/badge/Android-API%2026%2B-3DDC84.svg?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4.svg?style=for-the-badge&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![ML Kit](https://img.shields.io/badge/Google%20ML%20Kit-Subject%20Segmentation-FF6F00.svg?style=for-the-badge&logo=google&logoColor=white)](https://developers.google.com/ml-kit)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg?style=for-the-badge)](CODE_OF_CONDUCT.md)
 
 ---
 
@@ -172,9 +174,27 @@ CleanCut/
 │   │   │       └── ui/                              # Compose screens & preview components
 │   │   └── AndroidManifest.xml
 │   └── build.gradle.kts
-├── docs/                                            # Project architectural guardrails
-└── build.gradle.kts
-```
+## 📚 Documentation & Guides
+
+For deep dives into architecture, ML models, testing, and release configurations, explore our [Docs Hub](docs/README.md):
+
+- 🏗 **[Architecture Guide](docs/architecture.md)** — Clean Architecture, UDF, and layer specifications.
+- 🔮 **[ML Pipeline & Compositing](docs/ml-pipeline.md)** — Low-res inference, bilinear upscaling, and in-place alpha compositing.
+- 🛠 **[Development Setup](docs/setup.md)** — Workstation configuration and emulator setup.
+- 🧪 **[Testing Strategy](docs/testing.md)** — Unit tests, ViewModel Turbine tests, and memory benchmarks.
+- 🚀 **[Release Guide](docs/release.md)** — Keystore signing, R8/ProGuard rules, and deployment.
+
+---
+
+## 🤝 Contributing & Community
+
+Contributions are what make the open-source community an amazing place to learn, inspire, and create:
+
+- Read our **[Contributing Guidelines](CONTRIBUTING.md)** to get started with PRs, bug reports, and coding conventions.
+- Check our **[Code of Conduct](CODE_OF_CONDUCT.md)** for our community pledge and standards.
+- Review our **[Security Policy](SECURITY.md)** for vulnerability reporting.
+- Need help? Visit our **[Support Guide](SUPPORT.md)**.
+- See past releases in our **[Changelog](CHANGELOG.md)**.
 
 ---
 

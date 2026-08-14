@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: CleanCut Community Discussions
+    url: https://github.com/martian7777/CleanCut/discussions
+    about: Ask questions, share ideas, and connect with other users.
+  - name: Security Vulnerability Reporting
+    url: mailto:security@cleancut.dev
+    about: Privately report potential security vulnerabilities.
