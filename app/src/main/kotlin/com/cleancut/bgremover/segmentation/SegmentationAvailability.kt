@@ -6,7 +6,6 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.OptionalModuleApi
 import com.google.android.gms.common.moduleinstall.ModuleInstall
 import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
-import com.google.android.gms.common.moduleinstall.ModuleInstallStatusUpdate
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -23,7 +22,7 @@ class SegmentationAvailability(private val context: Context) {
 
     suspend fun ensureModuleAvailable(
         client: OptionalModuleApi,
-        onDownloadProgress: (bytesDownloaded: Long, totalBytesToDownload: Long) -> Unit,
+        onDownloadStarted: () -> Unit,
     ): Result<Unit> {
         if (!isPlayServicesAvailable()) {
             return Result.failure(BackgroundRemovalError.PlayServicesUnavailable)
@@ -37,14 +36,9 @@ class SegmentationAvailability(private val context: Context) {
                 return Result.success(Unit)
             }
 
+            onDownloadStarted()
             val request = ModuleInstallRequest.newBuilder()
                 .addApi(client)
-                .setListener { update: ModuleInstallStatusUpdate ->
-                    val progress = update.progressInfo
-                    if (progress != null) {
-                        onDownloadProgress(progress.bytesDownloaded, progress.totalBytesToDownload)
-                    }
-                }
                 .build()
 
             moduleInstallClient.installModules(request).await()

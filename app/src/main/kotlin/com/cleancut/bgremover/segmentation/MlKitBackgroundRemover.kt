@@ -35,10 +35,8 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
         val resolver = context.contentResolver
 
         onProgress(BackgroundRemovalStage.CHECKING_MODEL)
-        val availabilityResult = availability.ensureModuleAvailable(segmenter) { _, total ->
-            if (total > 0) {
-                onProgress(BackgroundRemovalStage.DOWNLOADING_MODEL)
-            }
+        val availabilityResult = availability.ensureModuleAvailable(segmenter) {
+            onProgress(BackgroundRemovalStage.DOWNLOADING_MODEL)
         }
         availabilityResult.exceptionOrNull()?.let { error ->
             return Result.failure(error)
