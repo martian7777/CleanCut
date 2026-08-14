@@ -93,8 +93,10 @@ class CleanCutViewModel(
             "Couldn't read that image. Try a different photo."
         is BackgroundRemovalError.OutOfMemory ->
             "This photo is too large for this device to process."
-        is BackgroundRemovalError.SegmentationFailed ->
-            "Background removal failed. Try again."
-        else -> "Something went wrong. Try again."
+        is BackgroundRemovalError.SegmentationFailed -> {
+            val detail = error.cause.message ?: error.cause::class.java.simpleName
+            "Background removal failed: $detail"
+        }
+        else -> "Something went wrong: ${error.message ?: error::class.java.simpleName}"
     }
 }
