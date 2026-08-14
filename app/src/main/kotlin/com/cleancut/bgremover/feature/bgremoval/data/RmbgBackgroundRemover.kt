@@ -34,7 +34,19 @@ class RmbgBackgroundRemover(private val context: Context) : BackgroundRemover {
 
     private val session: OrtSession by lazy {
         val modelBytes = context.assets.open(MODEL_ASSET_PATH).use { it.readBytes() }
-        ortEnvironment.createSession(modelBytes, OrtSession.SessionOptions())
+        val sessionOptions = OrtSession.SessionOptions().apply {
+            // ORT's default arena allocator pre-reserves large contiguous native
+            // memory blocks for speed. On memory-constrained real devices (as
+            // opposed to a desktop-backed emulator) that reservation itself can
+            // abort the process natively - no catchable Kotlin exception, the app
+            // just disappears. Disabling the arena/memory-pattern optimizations and
+            // capping thread count trades a little inference speed for allocating
+            // only what's actually needed.
+            setMemoryPatternOptimization(false)
+            setCPUArenaAllocator(false)
+            setIntraOpNumThreads(2)
+        }
+        ortEnvironment.createSession(modelBytes, sessionOptions)
     }
 
     override suspend fun removeBackground(
