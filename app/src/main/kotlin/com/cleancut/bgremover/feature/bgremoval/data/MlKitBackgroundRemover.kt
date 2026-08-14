@@ -1,9 +1,12 @@
-package com.cleancut.bgremover.segmentation
+package com.cleancut.bgremover.feature.bgremoval.data
 
 import android.content.Context
 import android.net.Uri
-import com.cleancut.bgremover.compositing.BitmapCompositor
-import com.cleancut.bgremover.compositing.ImageDecodeUtils
+import com.cleancut.bgremover.core.common.ImageDecodeUtils
+import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalError
+import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalStage
+import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemover
+import com.cleancut.bgremover.feature.bgremoval.domain.CompositeResult
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.segmentation.subject.SubjectSegmentation
 import com.google.mlkit.vision.segmentation.subject.SubjectSegmenterOptions

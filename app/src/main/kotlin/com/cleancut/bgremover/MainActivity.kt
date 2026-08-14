@@ -7,8 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.cleancut.bgremover.ui.screens.CleanCutScreen
-import com.cleancut.bgremover.ui.theme.CleanCutTheme
+import com.cleancut.bgremover.core.designsystem.CleanCutTheme
+import com.cleancut.bgremover.feature.bgremoval.ui.CleanCutScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

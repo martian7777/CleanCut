@@ -1,6 +1,7 @@
-package com.cleancut.bgremover.segmentation
+package com.cleancut.bgremover.feature.bgremoval.data
 
 import android.content.Context
+import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalError
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.OptionalModuleApi

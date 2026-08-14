@@ -1,4 +1,4 @@
-package com.cleancut.bgremover.ui.theme
+package com.cleancut.bgremover.core.designsystem
 
 import androidx.compose.ui.graphics.Color
 

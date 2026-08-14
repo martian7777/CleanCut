@@ -1,4 +1,4 @@
-package com.cleancut.bgremover.ui.components
+package com.cleancut.bgremover.feature.bgremoval.ui.components
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
@@ -12,8 +12,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.cleancut.bgremover.ui.theme.CheckerDark
-import com.cleancut.bgremover.ui.theme.CheckerLight
+import com.cleancut.bgremover.core.designsystem.CheckerDark
+import com.cleancut.bgremover.core.designsystem.CheckerLight
 
 /** Shows the cutout over a checkerboard so transparency is visibly obvious. */
 @Composable

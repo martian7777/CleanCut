@@ -1,4 +1,4 @@
-package com.cleancut.bgremover.ui.screens
+package com.cleancut.bgremover.feature.bgremoval.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -22,12 +22,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.cleancut.bgremover.ui.CleanCutUiState
-import com.cleancut.bgremover.ui.CleanCutViewModel
-import com.cleancut.bgremover.ui.components.ExportBar
-import com.cleancut.bgremover.ui.components.PickerButton
-import com.cleancut.bgremover.ui.components.ProcessingIndicator
-import com.cleancut.bgremover.ui.components.ResultPreview
+import com.cleancut.bgremover.feature.bgremoval.presentation.CleanCutUiState
+import com.cleancut.bgremover.feature.bgremoval.presentation.CleanCutViewModel
+import com.cleancut.bgremover.feature.bgremoval.ui.components.ExportBar
+import com.cleancut.bgremover.feature.bgremoval.ui.components.PickerButton
+import com.cleancut.bgremover.feature.bgremoval.ui.components.ProcessingIndicator
+import com.cleancut.bgremover.feature.bgremoval.ui.components.ResultPreview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

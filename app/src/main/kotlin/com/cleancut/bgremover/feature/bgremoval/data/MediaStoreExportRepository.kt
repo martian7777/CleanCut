@@ -1,4 +1,4 @@
-package com.cleancut.bgremover.export
+package com.cleancut.bgremover.feature.bgremoval.data
 
 import android.content.ContentValues
 import android.content.Context
@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import com.cleancut.bgremover.feature.bgremoval.domain.ExportRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -18,11 +19,11 @@ import java.io.FileOutputStream
  * alpha channel) to the gallery, then reuses that same saved Uri for the share
  * sheet - one write path serves both "save" and "share".
  */
-class ExportManager(private val context: Context) {
+class MediaStoreExportRepository(private val context: Context) : ExportRepository {
 
-    suspend fun saveToGallery(
+    override suspend fun saveToGallery(
         bitmap: Bitmap,
-        displayName: String = "CleanCut_${System.currentTimeMillis()}",
+        displayName: String,
     ): Result<Uri> = withContext(Dispatchers.IO) {
         try {
             val resolver = context.contentResolver
@@ -70,7 +71,7 @@ class ExportManager(private val context: Context) {
         }
     }
 
-    fun shareIntent(savedUri: Uri): Intent {
+    override fun shareIntent(savedUri: Uri): Intent {
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
             type = "image/png"
             putExtra(Intent.EXTRA_STREAM, savedUri)

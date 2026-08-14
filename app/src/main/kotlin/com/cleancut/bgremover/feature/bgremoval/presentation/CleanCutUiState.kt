@@ -1,7 +1,7 @@
-package com.cleancut.bgremover.ui
+package com.cleancut.bgremover.feature.bgremoval.presentation
 
 import android.graphics.Bitmap
-import com.cleancut.bgremover.segmentation.BackgroundRemovalStage
+import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalStage
 
 sealed interface CleanCutUiState {
     data object Idle : CleanCutUiState

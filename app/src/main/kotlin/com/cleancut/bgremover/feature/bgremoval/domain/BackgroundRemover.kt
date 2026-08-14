@@ -1,4 +1,4 @@
-package com.cleancut.bgremover.segmentation
+package com.cleancut.bgremover.feature.bgremoval.domain
 
 import android.net.Uri
 

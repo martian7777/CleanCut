@@ -1,4 +1,4 @@
-package com.cleancut.bgremover.ui.components
+package com.cleancut.bgremover.feature.bgremoval.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.cleancut.bgremover.segmentation.BackgroundRemovalStage
+import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalStage
 
 @Composable
 fun ProcessingIndicator(stage: BackgroundRemovalStage, modifier: Modifier = Modifier) {

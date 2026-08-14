@@ -1,4 +1,4 @@
-package com.cleancut.bgremover.ui.components
+package com.cleancut.bgremover.feature.bgremoval.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

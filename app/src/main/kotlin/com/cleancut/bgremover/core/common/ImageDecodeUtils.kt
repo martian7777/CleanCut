@@ -1,4 +1,4 @@
-package com.cleancut.bgremover.compositing
+package com.cleancut.bgremover.core.common
 
 import android.content.ContentResolver
 import android.graphics.Bitmap

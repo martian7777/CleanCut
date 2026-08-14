@@ -1,4 +1,4 @@
-package com.cleancut.bgremover.ui.theme
+package com.cleancut.bgremover.core.designsystem
 
 import android.app.Activity
 import android.os.Build
