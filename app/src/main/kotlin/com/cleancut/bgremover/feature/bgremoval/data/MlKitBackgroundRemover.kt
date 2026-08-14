@@ -25,11 +25,16 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
 
     private val availability = SegmentationAvailability(context)
 
-    private val segmenterOptions = SubjectSegmenterOptions.Builder()
-        .enableForegroundConfidenceMask()
-        .build()
-
-    private val segmenter = SubjectSegmentation.getClient(segmenterOptions)
+    // Deferred until first use (inside removeBackground's try block) rather than
+    // built eagerly here - this class is constructed as part of ViewModel setup at
+    // app launch, and any construction failure here would otherwise crash the app
+    // on every launch instead of surfacing as a recoverable error.
+    private val segmenter by lazy {
+        val segmenterOptions = SubjectSegmenterOptions.Builder()
+            .enableForegroundConfidenceMask()
+            .build()
+        SubjectSegmentation.getClient(segmenterOptions)
+    }
 
     override suspend fun removeBackground(
         sourceUri: Uri,
@@ -37,18 +42,18 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
     ): Result<CompositeResult> {
         val resolver = context.contentResolver
 
-        onProgress(BackgroundRemovalStage.CHECKING_MODEL)
-        val availabilityResult = availability.ensureModuleAvailable(segmenter) {
-            onProgress(BackgroundRemovalStage.DOWNLOADING_MODEL)
-        }
-        availabilityResult.exceptionOrNull()?.let { error ->
-            return Result.failure(error)
-        }
-
         var fullResSource: android.graphics.Bitmap? = null
         var segInputBitmap: android.graphics.Bitmap? = null
 
         return try {
+            onProgress(BackgroundRemovalStage.CHECKING_MODEL)
+            val availabilityResult = availability.ensureModuleAvailable(segmenter) {
+                onProgress(BackgroundRemovalStage.DOWNLOADING_MODEL)
+            }
+            availabilityResult.exceptionOrNull()?.let { error ->
+                return Result.failure(error)
+            }
+
             onProgress(BackgroundRemovalStage.DECODING)
             fullResSource = ImageDecodeUtils.decodeFullResolutionMutable(resolver, sourceUri)
             segInputBitmap = ImageDecodeUtils.decodeDownscaledForSegmentation(

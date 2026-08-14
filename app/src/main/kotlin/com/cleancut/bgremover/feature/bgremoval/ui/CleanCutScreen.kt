@@ -20,8 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cleancut.bgremover.feature.bgremoval.presentation.CleanCutUiState
 import com.cleancut.bgremover.feature.bgremoval.presentation.CleanCutViewModel
 import com.cleancut.bgremover.feature.bgremoval.ui.components.ExportBar
@@ -31,7 +34,21 @@ import com.cleancut.bgremover.feature.bgremoval.ui.components.ResultPreview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CleanCutScreen(viewModel: CleanCutViewModel = viewModel()) {
+fun CleanCutScreen(
+    viewModel: CleanCutViewModel = viewModel(
+        factory = viewModelFactory {
+            // CleanCutViewModel's constructor takes 3 params (2 with Kotlin default
+            // values) - the JVM sees one 3-arg constructor, not a reduced-arity
+            // overload, so the platform's reflection-based default factory can't find
+            // a match and crashes at ViewModel creation (i.e. on every app launch).
+            // An explicit initializer sidesteps reflection entirely.
+            initializer {
+                val application = checkNotNull(this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
+                CleanCutViewModel(application)
+            }
+        },
+    ),
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val shareIntent by viewModel.shareIntent.collectAsStateWithLifecycle()
     val context = LocalContext.current
