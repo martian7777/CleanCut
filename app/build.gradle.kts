@@ -15,6 +15,23 @@ android {
         versionName = "0.1.0"
     }
 
+    // Release signing is only available where CLEANCUT_KEYSTORE_PATH is set (CI, from
+    // secrets). A local `./gradlew assembleRelease` with no keystore present still
+    // configures cleanly - it just produces an unsigned build.
+    val releaseKeystorePath = System.getenv("CLEANCUT_KEYSTORE_PATH")
+
+    signingConfigs {
+        if (releaseKeystorePath != null) {
+            create("release") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = System.getenv("CLEANCUT_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("CLEANCUT_KEY_ALIAS")
+                keyPassword = System.getenv("CLEANCUT_KEY_PASSWORD")
+                storeType = "PKCS12"
+            }
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
@@ -22,6 +39,9 @@ android {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (releaseKeystorePath != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

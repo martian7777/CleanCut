@@ -14,3 +14,9 @@
 local.properties
 app/build/
 app/release/
+
+# Release signing material must never be committed - it lives outside the repo
+*.keystore
+*.jks
+*.p12
+keystore.properties
