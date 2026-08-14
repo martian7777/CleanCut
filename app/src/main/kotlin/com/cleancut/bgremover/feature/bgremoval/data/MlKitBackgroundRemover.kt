@@ -15,21 +15,10 @@ import java.io.File
 
 private const val SEGMENTATION_INPUT_LONG_EDGE_PX = 1024
 
-/**
- * Wraps ML Kit's Subject Segmentation API (general people/pets/objects, not just
- * selfies) behind [BackgroundRemover]. Segmentation always runs on a small
- * downscaled copy of the source - the model doesn't need a 48MP input - while the
- * final composite is built against the full-resolution decode so kept pixels stay
- * byte-identical to the source.
- */
 class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
 
     private val availability = SegmentationAvailability(context)
 
-    // Deferred until first use (inside removeBackground's try block) rather than
-    // built eagerly here - this class is constructed as part of ViewModel setup at
-    // app launch, and any construction failure here would otherwise crash the app
-    // on every launch instead of surfacing as a recoverable error.
     private val segmenter by lazy {
         val segmenterOptions = SubjectSegmenterOptions.Builder()
             .enableForegroundConfidenceMask()
@@ -45,6 +34,7 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
 
         var fullResSource: android.graphics.Bitmap? = null
         var segInputBitmap: android.graphics.Bitmap? = null
+        var originalPreview: android.graphics.Bitmap? = null
         var cachedSourceFile: File? = null
 
         return try {
@@ -57,15 +47,16 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
             }
 
             onProgress(BackgroundRemovalStage.DECODING)
-            // Copy once into app-private cache, then read those bytes once - Photo
-            // Picker Uris and even our own cache file aren't reliably reopenable
-            // across the multiple decode passes below (see ImageDecodeUtils).
             val cacheFile = ImageDecodeUtils.copyToLocalCache(context.cacheDir, resolver, sourceUri)
             cachedSourceFile = cacheFile
             val sourceBytes = ImageDecodeUtils.readSourceBytes(cacheFile)
 
             fullResSource = ImageDecodeUtils.decodeFullResolutionMutable(sourceBytes)
             segInputBitmap = ImageDecodeUtils.decodeDownscaledForSegmentation(
+                sourceBytes,
+                SEGMENTATION_INPUT_LONG_EDGE_PX,
+            )
+            originalPreview = ImageDecodeUtils.decodeDownscaledForSegmentation(
                 sourceBytes,
                 SEGMENTATION_INPUT_LONG_EDGE_PX,
             )
@@ -97,12 +88,14 @@ class MlKitBackgroundRemover(private val context: Context) : BackgroundRemover {
             val output = BitmapCompositor.compositeInPlace(fullResSource, fullMask)
 
             onProgress(BackgroundRemovalStage.DONE)
-            Result.success(CompositeResult(output, output.width, output.height))
+            Result.success(CompositeResult(output, output.width, output.height, originalPreview))
         } catch (oom: OutOfMemoryError) {
             fullResSource?.recycle()
+            originalPreview?.recycle()
             Result.failure(BackgroundRemovalError.OutOfMemory)
         } catch (t: Throwable) {
             fullResSource?.recycle()
+            originalPreview?.recycle()
             Result.failure(BackgroundRemovalError.SegmentationFailed(t))
         } finally {
             segInputBitmap?.recycle()

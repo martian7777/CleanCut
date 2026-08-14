@@ -2,11 +2,16 @@ package com.cleancut.bgremover.feature.bgremoval.presentation
 
 import android.app.Application
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.cleancut.bgremover.core.settings.ExportFormat
+import com.cleancut.bgremover.core.settings.SettingsManager
 import com.cleancut.bgremover.feature.bgremoval.data.MediaStoreExportRepository
 import com.cleancut.bgremover.feature.bgremoval.data.MlKitBackgroundRemover
+import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundOption
 import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalError
 import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalStage
 import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemover
@@ -21,6 +26,7 @@ class CleanCutViewModel(
     application: Application,
     private val backgroundRemover: BackgroundRemover = MlKitBackgroundRemover(application),
     private val exportRepository: ExportRepository = MediaStoreExportRepository(application),
+    private val settingsManager: SettingsManager = SettingsManager.getInstance(application),
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<CleanCutUiState>(CleanCutUiState.Idle)
@@ -42,7 +48,11 @@ class CleanCutViewModel(
 
             result.fold(
                 onSuccess = { composite ->
-                    _uiState.value = CleanCutUiState.Result(composite.outputBitmap)
+                    _uiState.value = CleanCutUiState.Result(
+                        bitmap = composite.outputBitmap,
+                        originalBitmap = composite.originalPreview,
+                        selectedBackground = BackgroundOption.Transparent,
+                    )
                 },
                 onFailure = { error ->
                     _uiState.value = CleanCutUiState.Error(
@@ -54,10 +64,29 @@ class CleanCutViewModel(
         }
     }
 
+    fun onBackgroundSelected(option: BackgroundOption) {
+        val state = _uiState.value as? CleanCutUiState.Result ?: return
+        lastSavedUri = null
+        _uiState.value = state.copy(selectedBackground = option, savedMessage = null)
+    }
+
     fun onSaveClicked() {
         val state = _uiState.value as? CleanCutUiState.Result ?: return
-        viewModelScope.launch {
-            exportRepository.saveToGallery(state.bitmap).onSuccess { uri ->
+        val currentSettings = settingsManager.settings.value
+        val format = if (state.selectedBackground is BackgroundOption.SolidColor && currentSettings.exportFormat == ExportFormat.PNG) {
+            // Can save as PNG with solid color or format as configured
+            currentSettings.exportFormat
+        } else {
+            currentSettings.exportFormat
+        }
+
+        viewModelScope.launch(Dispatchers.Default) {
+            val exportBitmap = prepareBitmapForExport(state.bitmap, state.selectedBackground)
+            exportRepository.saveToGallery(
+                bitmap = exportBitmap,
+                format = format,
+                quality = currentSettings.exportQuality,
+            ).onSuccess { uri ->
                 lastSavedUri = uri
                 _uiState.value = state.copy(savedMessage = "Saved to Pictures/CleanCut")
             }
@@ -66,12 +95,22 @@ class CleanCutViewModel(
 
     fun onShareClicked() {
         val state = _uiState.value as? CleanCutUiState.Result ?: return
-        viewModelScope.launch {
-            val uri = lastSavedUri ?: exportRepository.saveToGallery(state.bitmap).getOrNull()?.also { newUri ->
+        val currentSettings = settingsManager.settings.value
+
+        viewModelScope.launch(Dispatchers.Default) {
+            val exportBitmap = prepareBitmapForExport(state.bitmap, state.selectedBackground)
+            val uri = lastSavedUri ?: exportRepository.saveToGallery(
+                bitmap = exportBitmap,
+                format = currentSettings.exportFormat,
+                quality = currentSettings.exportQuality,
+            ).getOrNull()?.also { newUri ->
                 lastSavedUri = newUri
                 _uiState.value = state.copy(savedMessage = "Saved to Pictures/CleanCut")
             }
-            uri?.let { _shareIntent.value = exportRepository.shareIntent(it) }
+
+            uri?.let {
+                _shareIntent.value = exportRepository.shareIntent(it, currentSettings.exportFormat.mimeType)
+            }
         }
     }
 
@@ -82,6 +121,19 @@ class CleanCutViewModel(
     fun reset() {
         lastSavedUri = null
         _uiState.value = CleanCutUiState.Idle
+    }
+
+    private fun prepareBitmapForExport(cutout: Bitmap, backgroundOption: BackgroundOption): Bitmap {
+        return when (backgroundOption) {
+            is BackgroundOption.Transparent -> cutout
+            is BackgroundOption.SolidColor -> {
+                val composite = Bitmap.createBitmap(cutout.width, cutout.height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(composite)
+                canvas.drawColor(backgroundOption.argbInt)
+                canvas.drawBitmap(cutout, 0f, 0f, null)
+                composite
+            }
+        }
     }
 
     private fun errorMessage(error: Throwable): String = when (error) {

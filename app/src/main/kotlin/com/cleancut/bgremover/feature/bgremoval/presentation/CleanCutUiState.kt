@@ -1,6 +1,7 @@
 package com.cleancut.bgremover.feature.bgremoval.presentation
 
 import android.graphics.Bitmap
+import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundOption
 import com.cleancut.bgremover.feature.bgremoval.domain.BackgroundRemovalStage
 
 sealed interface CleanCutUiState {
@@ -8,7 +9,12 @@ sealed interface CleanCutUiState {
 
     data class Processing(val stage: BackgroundRemovalStage) : CleanCutUiState
 
-    data class Result(val bitmap: Bitmap, val savedMessage: String? = null) : CleanCutUiState
+    data class Result(
+        val bitmap: Bitmap,
+        val originalBitmap: Bitmap? = null,
+        val selectedBackground: BackgroundOption = BackgroundOption.Transparent,
+        val savedMessage: String? = null,
+    ) : CleanCutUiState
 
     data class Error(val message: String, val recoverable: Boolean) : CleanCutUiState
 }
