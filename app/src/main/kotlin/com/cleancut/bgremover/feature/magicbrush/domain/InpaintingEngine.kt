@@ -1,6 +1,7 @@
 package com.cleancut.bgremover.feature.magicbrush.domain
 
 import android.graphics.Bitmap
+import java.io.Closeable
 
 enum class InpaintingStage {
     LOADING_MODEL,
@@ -22,7 +23,7 @@ sealed class InpaintingError : Exception() {
     data class InferenceFailed(override val cause: Throwable) : InpaintingError()
 }
 
-interface InpaintingEngine {
+interface InpaintingEngine : Closeable {
     /**
      * Erases the region marked in [mask] from [source] and fills it back in, mutating
      * [source] in place. [source] is the caller-owned, already-decoded working bitmap -

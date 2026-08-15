@@ -1,6 +1,7 @@
 package com.cleancut.bgremover.feature.bgremoval.domain
 
 import android.net.Uri
+import java.io.Closeable
 
 enum class BackgroundRemovalStage {
     DECODING,
@@ -22,7 +23,7 @@ sealed class BackgroundRemovalError : Exception() {
     data class SegmentationFailed(override val cause: Throwable) : BackgroundRemovalError()
 }
 
-interface BackgroundRemover {
+interface BackgroundRemover : Closeable {
     suspend fun removeBackground(
         sourceUri: Uri,
         onProgress: (BackgroundRemovalStage) -> Unit,

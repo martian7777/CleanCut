@@ -36,6 +36,10 @@ class MagicBrushViewModel(
 
     private var lastSavedUri: Uri? = null
 
+    override fun onCleared() {
+        inpaintingEngine.close()
+    }
+
     // Patch-based undo/redo: each entry is the small before/after crop touched by one erase
     // step (see ErasePatch), not a full-bitmap copy - a 48MP full-bitmap history would OOM
     // within a couple of steps. historyIndex points at the last *applied* patch; -1 means
