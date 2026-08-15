@@ -25,9 +25,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cleancut.bgremover.core.designsystem.CleanCutTheme
 import com.cleancut.bgremover.core.settings.AppThemeMode
 import com.cleancut.bgremover.core.settings.SettingsManager
-import com.cleancut.bgremover.feature.bgremoval.ui.CleanCutScreen
 import com.cleancut.bgremover.feature.settings.ui.SettingsScreen
 import com.cleancut.bgremover.feature.splash.ui.SplashScreen
+import com.cleancut.bgremover.feature.studio.ui.StudioScreen
 
 enum class AppDestination {
     SPLASH,
@@ -104,7 +104,7 @@ fun CleanCutAppRoot() {
                 )
             }
             AppDestination.STUDIO -> {
-                CleanCutScreen(
+                StudioScreen(
                     onNavigateToSettings = {
                         currentDestination = AppDestination.SETTINGS
                     },

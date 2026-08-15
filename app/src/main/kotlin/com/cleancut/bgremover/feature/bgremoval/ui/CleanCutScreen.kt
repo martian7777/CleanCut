@@ -1,5 +1,6 @@
 package com.cleancut.bgremover.feature.bgremoval.ui
 
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -78,7 +79,10 @@ import com.cleancut.bgremover.feature.bgremoval.ui.components.ResultPreview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CleanCutScreen(
+    initialUri: Uri? = null,
     onNavigateToSettings: () -> Unit = {},
+    onImagePicked: (Uri) -> Unit = {},
+    modeToggle: @Composable () -> Unit = {},
     viewModel: CleanCutViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
@@ -102,7 +106,14 @@ fun CleanCutScreen(
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
-        uri?.let(viewModel::onImagePicked)
+        uri?.let {
+            onImagePicked(it)
+            viewModel.onImagePicked(it)
+        }
+    }
+
+    LaunchedEffect(initialUri) {
+        initialUri?.let(viewModel::onImagePicked)
     }
 
     LaunchedEffect(shareIntent) {
@@ -210,6 +221,12 @@ fun CleanCutScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+        ) {
+        modeToggle()
         AnimatedContent(
             targetState = uiState,
             transitionSpec = {
@@ -217,8 +234,8 @@ fun CleanCutScreen(
             },
             label = "screenState",
             modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
+                .weight(1f)
+                .fillMaxWidth(),
         ) { state ->
             when (state) {
                 is CleanCutUiState.Idle -> PickerButton(
@@ -345,6 +362,7 @@ fun CleanCutScreen(
                     }
                 }
             }
+        }
         }
     }
 }
