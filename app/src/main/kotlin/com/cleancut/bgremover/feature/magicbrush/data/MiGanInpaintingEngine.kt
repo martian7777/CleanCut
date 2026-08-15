@@ -53,6 +53,11 @@ class MiGanInpaintingEngine(private val context: Context) : InpaintingEngine {
         ortEnvironment.createSession(modelBytes, sessionOptions)
     }
 
+    override fun close() {
+        if (this::session.isInitialized) session.close()
+        if (this::ortEnvironment.isInitialized) ortEnvironment.close()
+    }
+
     override suspend fun inpaint(
         source: Bitmap,
         mask: MaskRegion,

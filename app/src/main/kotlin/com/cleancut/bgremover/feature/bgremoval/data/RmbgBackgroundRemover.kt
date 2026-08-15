@@ -49,6 +49,11 @@ class RmbgBackgroundRemover(private val context: Context) : BackgroundRemover {
         ortEnvironment.createSession(modelBytes, sessionOptions)
     }
 
+    override fun close() {
+        if (this::session.isInitialized) session.close()
+        if (this::ortEnvironment.isInitialized) ortEnvironment.close()
+    }
+
     override suspend fun removeBackground(
         sourceUri: Uri,
         onProgress: (BackgroundRemovalStage) -> Unit,

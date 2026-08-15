@@ -61,9 +61,9 @@ Release output locations:
 CleanCut enables R8 code shrinking and resource minification in release mode (`isMinifyEnabled = true`).
 
 Key ProGuard rules in `app/proguard-rules.pro` preserve:
-- ML Kit Subject Segmentation internal dynamic loading classes
-- Coroutines reflection entry points
-- Jetpack Compose runtime metadata
+- ONNX Runtime classes (`ai.onnxruntime.**`), which the native JNI layer resolves via reflection (`GetMethodID`) at inference time. Without this rule, release builds abort with `JNI DETECTED ERROR ... java_class == null` inside `OrtSession.run()`.
+
+Resource shrinking (`isShrinkResources`) is not enabled. Model weights (`migan_pipeline_v2.onnx`, `rmbg-1.4.onnx`) live in `app/src/main/assets/`, not `res/raw/`, so they are unaffected by shrinking either way.
 
 ---
 

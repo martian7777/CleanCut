@@ -37,6 +37,10 @@ class CleanCutViewModel(
 
     private var lastSavedUri: Uri? = null
 
+    override fun onCleared() {
+        backgroundRemover.close()
+    }
+
     fun onImagePicked(uri: Uri) {
         lastSavedUri = null
         viewModelScope.launch(Dispatchers.Default) {
