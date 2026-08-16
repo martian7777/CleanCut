@@ -30,9 +30,10 @@ private const val SEGMENTATION_INPUT_LONG_EDGE_PX = 1024
 
 class RmbgBackgroundRemover(private val context: Context) : BackgroundRemover {
 
-    private val ortEnvironment: OrtEnvironment by lazy { OrtEnvironment.getEnvironment() }
+    private val ortEnvironmentLazy = lazy { OrtEnvironment.getEnvironment() }
+    private val ortEnvironment: OrtEnvironment by ortEnvironmentLazy
 
-    private val session: OrtSession by lazy {
+    private val sessionLazy = lazy {
         val modelBytes = context.assets.open(MODEL_ASSET_PATH).use { it.readBytes() }
         val sessionOptions = OrtSession.SessionOptions().apply {
             // ORT's default arena allocator pre-reserves large contiguous native
@@ -48,10 +49,11 @@ class RmbgBackgroundRemover(private val context: Context) : BackgroundRemover {
         }
         ortEnvironment.createSession(modelBytes, sessionOptions)
     }
+    private val session: OrtSession by sessionLazy
 
     override fun close() {
-        if (this::session.isInitialized) session.close()
-        if (this::ortEnvironment.isInitialized) ortEnvironment.close()
+        if (sessionLazy.isInitialized()) session.close()
+        if (ortEnvironmentLazy.isInitialized()) ortEnvironment.close()
     }
 
     override suspend fun removeBackground(
