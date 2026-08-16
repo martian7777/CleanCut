@@ -149,6 +149,13 @@ class MiGanInpaintingEngine(private val context: Context) : InpaintingEngine {
      * domain polarity (255 = erase, 0 = keep) to the model's (255 = keep, 0 = erase) - the
      * one place this flip happens. Getting it backwards here erases the *background*
      * instead of the painted object.
+     *
+     * The brush is anti-aliased, so [MaskRegion.maskBitmap] carries graduated alpha at
+     * stroke edges and at round-cap overlap seams - but the model was trained on strictly
+     * binary hole masks (see the model repo's read_mask()) and has no notion of "half
+     * erased". Left graduated, those pixels get told "mostly keep this", so the model
+     * preserves a faint trace of the painted-over content right where the mask is softest.
+     * Thresholding here keeps that binary contract intact.
      */
     private fun buildModelMaskBytes(mask: MaskRegion, cropRect: Rect, width: Int, height: Int): ByteArray {
         val bytes = ByteArray(width * height) { KEEP_BYTE }
@@ -169,7 +176,7 @@ class MiGanInpaintingEngine(private val context: Context) : InpaintingEngine {
                 val destX = offsetX + x
                 if (destX < 0 || destX >= width) continue
                 val domainAlpha = maskAlpha[srcRowStart + x].toInt() and 0xFF
-                bytes[destRowStart + destX] = (255 - domainAlpha).toByte()
+                bytes[destRowStart + destX] = if (domainAlpha >= 128) 0 else KEEP_BYTE
             }
         }
         return bytes
