@@ -40,19 +40,21 @@ jobs:
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: cleancut-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 7
 
       - name: Upload debug AAB
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: cleancut-debug-aab
           path: app/build/outputs/bundle/debug/*.aab
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 7
 
       - name: Check for release signing secret
         id: release_signing
@@ -83,20 +85,22 @@ jobs:
       - name: Upload release APK
         if: steps.release_signing.outputs.enabled == 'true'
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: cleancut-release-apk
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 7
 
       - name: Upload release AAB
         if: steps.release_signing.outputs.enabled == 'true'
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: cleancut-release-aab
           path: app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 7
 
       - name: Clean up decoded keystore
         if: always()
