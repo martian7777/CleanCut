@@ -38,9 +38,10 @@ private const val KEEP_BYTE: Byte = 0xFF.toByte()
 
 class MiGanInpaintingEngine(private val context: Context) : InpaintingEngine {
 
-    private val ortEnvironment: OrtEnvironment by lazy { OrtEnvironment.getEnvironment() }
+    private val ortEnvironmentLazy = lazy { OrtEnvironment.getEnvironment() }
+    private val ortEnvironment: OrtEnvironment by ortEnvironmentLazy
 
-    private val session: OrtSession by lazy {
+    private val sessionLazy = lazy {
         val modelBytes = context.assets.open(MODEL_ASSET_PATH).use { it.readBytes() }
         val sessionOptions = OrtSession.SessionOptions().apply {
             // Mirrors RmbgBackgroundRemover's CPU-only configuration: ORT's default arena
@@ -52,10 +53,11 @@ class MiGanInpaintingEngine(private val context: Context) : InpaintingEngine {
         }
         ortEnvironment.createSession(modelBytes, sessionOptions)
     }
+    private val session: OrtSession by sessionLazy
 
     override fun close() {
-        if (this::session.isInitialized) session.close()
-        if (this::ortEnvironment.isInitialized) ortEnvironment.close()
+        if (sessionLazy.isInitialized()) session.close()
+        if (ortEnvironmentLazy.isInitialized()) ortEnvironment.close()
     }
 
     override suspend fun inpaint(
